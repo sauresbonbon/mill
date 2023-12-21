@@ -4,8 +4,7 @@ public class Piece {
     Piece() {
 
     }
-    void move(){
 
-    }
+
 
 }
