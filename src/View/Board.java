@@ -2,8 +2,10 @@ package View;
 import Controller.IController;
 
 import processing.core.PApplet;
+import controlP5.*;
 
-public class Field extends PApplet implements IField {
+public class Board extends PApplet implements IBoard {
+    ControlP5 cp5;
     /**
      * The width of the graphic window.
      */
@@ -36,6 +38,7 @@ public class Field extends PApplet implements IField {
     @Override
     public void setup() {
         controller.startNewGame();
+        cp5 = new ControlP5(this);
     }
 
     /**

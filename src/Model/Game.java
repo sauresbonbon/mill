@@ -111,8 +111,7 @@ public class Game implements IGame{
                 }
             }
             // Points: 1,2,3,4,5,6,9,10,11,12,13,14,18,20,22  +-1
-            if(from == 1|| from == 2 || from ==3 || from == 4 || from == 5 || from == 6 || from == 9 || from == 10 ||
-                    from == 11|| from == 12 || from == 13 || from == 14 ||from == 17 || from == 18 || from == 19 || from == 20 || from == 21 || from == 22) {
+            if(from == 1|| from == 2 || from ==3 || from == 4 || from == 5 || from == 6 || from == 9 || from == 10 || from == 11|| from == 12 || from == 13 || from == 14 ||from == 17 || from == 18 || from == 19 || from == 20 || from == 21 || from == 22) {
                 if(grid[from+1] == FieldState.FREE) {
                     validMoves.add(from+1);
                 }
@@ -121,6 +120,10 @@ public class Game implements IGame{
                 }
             }
             return validMoves;
+    }
+
+    public void updateField() {
+
     }
 
     public void makeMove(Player currentPlayer, int from, int to) {
@@ -145,10 +148,8 @@ public class Game implements IGame{
         switchPlayer(currentPlayer);
         checkIfMill();
     }
-    public void updateField() {
 
-    }
-
+    //TODO If it is a mill, the current player may remove one of the other player's pieces.
     public void checkIfMill() {
         for (int i = 0; i < 23; i++) {
             if(grid[i] == grid[i+7] && grid[i] == grid[i+6] && grid[i] != FieldState.FREE) {
@@ -171,7 +172,10 @@ public class Game implements IGame{
             i++;
         }
     }
-    //CurrentPlayer kann einen beliebigen Stein von otherPlayer entfernen
+
+    /**
+     * CurrentPlayer can remove any piece from otherPlayer.
+     */
     public  void removePiece(Player otherPlayer, int point) {
         if(otherPlayer.getColor() == grid[point]) {
             grid[point] = FieldState.FREE;

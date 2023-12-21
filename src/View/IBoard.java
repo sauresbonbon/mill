@@ -2,7 +2,7 @@ package View;
 
 import Controller.IController;
 
-public interface IField {
+public interface IBoard {
     void setController(IController controller);
     void settings();
     void setup();

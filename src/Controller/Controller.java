@@ -1,12 +1,12 @@
 package Controller;
-import View.IField;
+import View.IBoard;
 import Model.*;
 
 public class Controller implements IController{
     IGame game;
-    IField grid;
+    IBoard grid;
 
-    public void setGrid(IField grid) {
+    public void setGrid(IBoard grid) {
         this.grid = grid;
     }
 
