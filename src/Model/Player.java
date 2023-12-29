@@ -17,7 +17,13 @@ public class Player {
     int getPiecesCount() {
         return piecesCount;
     }
+    void setPiecesCount(int newPiecesCount) {
+        piecesCount = newPiecesCount;
+    }
     int getPiecesOnBoard() {
         return piecesOnBoard;
+    }
+    void setPiecesOnBoard(int newPiecesOnBoard) {
+        piecesOnBoard = newPiecesOnBoard;
     }
 }

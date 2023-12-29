@@ -3,71 +3,143 @@ package Model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 public class Game implements IGame{
-    Player player1;
-    Player player2;
+    Scanner sc = new Scanner(System.in);;
+    private Player player1;
+    private Player player2;
+    Player currentPlayer;
+
     private final FieldState[] grid = new FieldState[24];
 
     public void startNewGame() {
         Arrays.fill(grid, FieldState.FREE);
-        Player player1 = new Player(FieldState.WHITE, 9,9);
-        Player player2 = new Player(FieldState.BLACK, 9,9);
+        player1 = new Player(FieldState.WHITE, 9,9);
+        player2 = new Player(FieldState.BLACK, 9,9);
 
-//        System.out.println(this);
-//
-//        System.out.println("Placing-Phase");
-//        setPieces(player1, 0);
-//        setPieces(player2, 4);
-//
-//        setPieces(player1, 6);
-//        setPieces(player2, 2);
-//
-//        setPieces(player1, 15);
-//        setPieces(player2, 16);
-//
-//        setPieces(player1, 20);
-//        setPieces(player2, 3);
-//
-//        setPieces(player1, 7);
-//        setPieces(player2, 1);
-//
-//        setPieces(player1, 8);
-//        setPieces(player2, 23);
-//
-//        setPieces(player1, 14);
-//        setPieces(player2, 9);
-//
-//        setPieces(player1, 13);
-//        setPieces(player2, 17);
-//
-//        setPieces(player1, 12);
-//        setPieces(player2, 22);
-//
-//        System.out.println(this);
-//
-//        removePiece(player1, 14);
-//        removePiece(player1, 0);
-//        removePiece(player1, 7);
-//        removePiece(player1, 6);
-//        removePiece(player1, 12);
-//        removePiece(player1, 13);
-//        removePiece(player1, 8);
-//        checkIfMill();
-//        System.out.println(this);
-//
-//        System.out.println("Moving-Phase");
-//        makeMove(player1, 15,14);
-//        System.out.println(this);
+        currentPlayer = player1;
+
+        game();
+    }
+    public void game() {
+        //Setting-Phase
+        while(currentPlayer.getPiecesCount() > 0) {
+            System.out.println(this);
+            System.out.println(currentPlayer.getColor() + " setz deinen Stein.");
+            int point = sc.nextInt();
+            while(!setPieces(point)){
+                point = sc.nextInt();
+            }
+            if(checkIfMill()) {
+                System.out.println(currentPlayer.getColor() + " can remove a Piece from the other Player: ");
+                int remPoint = sc.nextInt();
+                removePiece(remPoint);
+            }
+            switchPlayer();
+        }
+        //Moving-Phase
+        while(currentPlayer.getPiecesOnBoard() > 3) {
+            System.out.println(this);
+            for(int j = 0; j < grid.length; j++) {
+                if(!isEmpty(j) && grid[j] == currentPlayer.getColor()) {
+                    if(!allValidMoves(j).isEmpty()) {
+                        System.out.println("Valid Move from " + j + " to " + allValidMoves(j));
+                    }
+                }
+            }
+            System.out.println(currentPlayer.getColor() + " can move a piece from... ");
+            int from = sc.nextInt();
+            System.out.println("to the point...");
+            int to = sc.nextInt();
+            makeMove(from,to);
+            if(checkIfMill()) {
+                System.out.println(currentPlayer.getColor() + " can remove a Piece from the other Player: ");
+                int remPoint = sc.nextInt();
+                removePiece(remPoint);
+            }
+            switchPlayer();
+        }
+    }
+
+    public void makeMove(int from, int to) {
+        if(isValidMove(from, to) && currentPlayer.getColor() == grid[from]) {
+            grid[from] = FieldState.FREE;
+            grid[to] = currentPlayer.getColor();
+        } else {
+            System.out.println("The point " + to + " is either already occupied or the move is not valid.");
+        }
+    }
+
+    public boolean setPieces(int point) {
+        if(currentPlayer.getPiecesCount() > 0) {
+            if(isEmpty(point)) {
+                grid[point] = currentPlayer.getColor();
+                currentPlayer.setPiecesCount(currentPlayer.getPiecesCount() - 1);
+                System.out.println(currentPlayer.getColor() + " has " + currentPlayer.getPiecesCount() + " pieces left.");
+                return true;
+            }
+        }
+        System.out.println("The point " + point + " is already occupied.");
+        return false;
+    }
+    //TODO Aktuell wird eine alte Mühle immer wieder gewertet
+    public boolean checkIfMill() {
+        for (int i = 0; i < 23; i++) {
+            if(grid[i] == grid[i+7] && grid[i] == grid[i+6] && grid[i] == currentPlayer.getColor()) {
+                System.out.println("Found ORANGE Mill at:" + i + "-" + (i+7) + "-" + (i+6));
+                return true;
+            }
+            i += 7;
+        }
+        for(int i = 0; i < 20; i++) {
+            if(i == 6 || i == 14) {
+                i+=2;
+            } else if(grid[i] == grid[i+1] && grid[i] == grid[i+2] && grid[i] == currentPlayer.getColor()) {
+                System.out.println("Found GREEN Mill at:" + i + "-" + (i+1) + "-" + (i+2));
+                return true;
+            }
+                i++;
+        }
+        for(int i = 1; i <= 7; i++) {
+            if(grid[i] == grid[i+8] && grid[i] == grid[i+16] && grid[i] == currentPlayer.getColor()) {
+                System.out.println("Found BLUE Mill at:" + i + "-" + (i+8) + "-" + (i+16));
+                return true;
+            }
+            i++;
+        }
+        return false;
+    }
+
+    /**
+     * CurrentPlayer can remove any piece from otherPlayer.
+     */
+    public  void removePiece(int point) {
+        Player otherPlayer = (currentPlayer == player1) ? player2 : player1;
+        if(otherPlayer.getColor() == grid[point]) {
+            grid[point] = FieldState.FREE;
+            otherPlayer.setPiecesOnBoard(currentPlayer.getPiecesOnBoard() - 1);
+            checkWinStatus(otherPlayer);
+        } else {
+            System.out.println("Error: Either an attempt is made to remove one of your own stones or the point is already empty.");
+        }
+    }
+    public void checkWinStatus(Player otherPlayer) {
+        if(otherPlayer.getPiecesOnBoard() < 3) {
+            System.out.println(otherPlayer.getColor() + " is Game Over!");
+        }
+    }
+
+    public void switchPlayer() {
+        currentPlayer = (currentPlayer == player1) ? player2 : player1;
     }
 
     public boolean isEmpty(int point) {
         return grid[point] == FieldState.FREE;
     }
 
-    // Methode braucht aktuellen Player, ausgewählte Position und ausgewählte Zielposition.
     public boolean isValidMove(int from, int to) {
-        List<Integer> validMoves = allValidMoves(grid, from);
+        List<Integer> validMoves = allValidMoves(from);
         if(isEmpty(to)) {
             for (Integer validMove : validMoves) {
                 if (to == validMove) {
@@ -77,8 +149,7 @@ public class Game implements IGame{
         }
         return false;
     }
-
-    public List<Integer> allValidMoves(FieldState[] grid, int from) {
+    public List<Integer> allValidMoves(int from) {
         List<Integer> validMoves = new ArrayList<>();
             //Points: 0,8,16    Special
             if (from == 0 || from == 8 || from == 16) {
@@ -121,100 +192,30 @@ public class Game implements IGame{
             }
             return validMoves;
     }
-
-    public void updateField() {
-
-    }
-
-    public void makeMove(Player currentPlayer, int from, int to) {
-        if(isValidMove(from, to) && currentPlayer.getColor() == grid[from]) {
-            grid[from] = FieldState.FREE;
-            grid[to] = currentPlayer.getColor();
-            checkIfMill();
-            switchPlayer(currentPlayer);
-        } else {
-            System.out.println("The point " + to + " is either already occupied or the move is not valid.");
-        }
-    }
-
-
-    public void setPieces(Player currentPlayer, int point) {
-        if(currentPlayer.piecesCount > 0) {
-            if(isEmpty(point)) {
-                grid[point] = currentPlayer.getColor();
-            }
-            currentPlayer.piecesCount -= 1;
-        }
-        switchPlayer(currentPlayer);
-        checkIfMill();
-    }
-
-    //TODO If it is a mill, the current player may remove one of the other player's pieces.
-    public void checkIfMill() {
-        for (int i = 0; i < 23; i++) {
-            if(grid[i] == grid[i+7] && grid[i] == grid[i+6] && grid[i] != FieldState.FREE) {
-                System.out.println("Found ORANGE Mill at:" + i + "-" + (i+7) + "-" + (i+6));
-            }
-            i += 7;
-        }
-        for(int i = 0; i < 20; i++) {
-            if(i == 6 || i == 14) {
-                i+=2;
-            } else if(grid[i] == grid[i+1] && grid[i] == grid[i+2] && grid[i] != FieldState.FREE) {
-                System.out.println("Found GREEN Mill at:" + i + "-" + (i+1) + "-" + (i+2));
-            }
-                i++;
-        }
-        for(int i = 1; i <= 7; i++) {
-            if(grid[i] == grid[i+8] && grid[i] == grid[i+16] && grid[i] != FieldState.FREE) {
-                System.out.println("Found BLUE Mill at:" + i + "-" + (i+8) + "-" + (i+16));
-            }
-            i++;
-        }
-    }
-
-    /**
-     * CurrentPlayer can remove any piece from otherPlayer.
-     */
-    public  void removePiece(Player otherPlayer, int point) {
-        if(otherPlayer.getColor() == grid[point]) {
-            grid[point] = FieldState.FREE;
-            otherPlayer.piecesOnBoard -= 1;
-            checkWinStatus(otherPlayer);
-        } else {
-            System.out.println("Error: Either an attempt is made to remove one of your own stones or the point is already empty.");
-        }
-    }
-    public void checkWinStatus(Player otherPlayer) {
-        if(otherPlayer.piecesOnBoard < 3) {
-            System.out.println(otherPlayer + " is Game Over!");
-        }
-    }
-
-    public void switchPlayer(Player currentPlayer) {
-        currentPlayer = (currentPlayer == player1) ? player2 : player1;
-    }
-
     @Override
     public String toString() {
-        String gridState =  "(0)------------------(1)-------------------(2)\n" +
-                            " |                    |                     |\n" +
-                            " |    (8)------------(9)-------------(10)    |\n" +
-                            " |     |              |               |     |\n" +
-                            " |     |    (16)------(17)------(18)     |     |\n" +
-                            " |     |     |                  |     |     |\n" +
-                            " |     |     |                  |     |     |\n" +
-                            "(7)---(15)---(23)                (19)---(11)---(3)\n" +
-                            " |     |     |                  |     |     |\n" +
-                            " |     |     |                  |     |     |\n" +
-                            " |     |    (22)-------(21)------(20)    |     |\n" +
-                            " |     |              |               |     |\n" +
-                            " |    (14)------------(13)-------------(12)    |\n" +
-                            " |                    |                     |\n" +
-                            "(6)------------------(5)-------------------(4)";
+        String gridState =  "(0)------------------------(1)--------------------------(2)\n" +
+                            "  |                            |                              |\n" +
+                            "  |     (8)----------------(9)----------------(10)      |\n" +
+                            "  |       |                    |                     |        |\n" +
+                            "  |       |      (16)------(17)------(18)      |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "(7)---(15)---(23)                   (19)---(11)---(3)\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |        |                        |        |        |\n" +
+                            "  |       |      (22)------(21)------(20)      |        |\n" +
+                            "  |       |                    |                     |        |\n" +
+                            "  |     (14)---------------(13)---------------(12)      |\n" +
+                            "  |                            |                              |\n" +
+                            "(6)------------------------(5)--------------------------(4)";
         for(int i = 0; i < grid.length; i++) {
-            gridState = gridState.replaceAll("\\("+i+"\\)", grid[i] == FieldState.FREE ? "(F)"
-                    : grid[i] == FieldState.BLACK ? "(B)" : "(W)");
+            gridState = gridState.replaceAll("\\("+i+"\\)", grid[i] == FieldState.FREE ? "(F/"+ i +")"
+                    : grid[i] == FieldState.BLACK ? "(B/"+ i +")" : "(W/"+ i +")");
         }
         return gridState;
     }
